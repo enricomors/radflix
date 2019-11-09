@@ -19,7 +19,7 @@
     "express": "^4.16.3",
     "fs-extra": "^8.1.0",
     "mongoose": "^5.6.3",
-    "radixdlt": "git://github.com/radixdlt/radixdlt-js.git#rc/betanet",
+    "radixdlt": "^2.0.0-beta.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
