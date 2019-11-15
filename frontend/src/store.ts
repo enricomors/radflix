@@ -9,7 +9,7 @@ export default new Vuex.Store({
   },
   mutations: {
     setIdentity(state, newIdentity) {
-      state.identity = newIdentity
+      state.identity = newIdentity;
     },
   },
   actions: {

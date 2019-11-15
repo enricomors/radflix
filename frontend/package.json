@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "buefy": "^0.7.8",
-    "core-js": "^2.6.5",
+    "core-js": "^2.6.10",
     "radixdlt": "^2.0.0-beta.1",
     "vue": "^2.6.10",
     "vue-resource": "^1.5.1",

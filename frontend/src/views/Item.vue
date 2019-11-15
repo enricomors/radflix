@@ -6,16 +6,16 @@
     {{error}}
   </div>
   <div v-else class="home">
-    <h1>{{movie.name}}</h1>
+    <h1>{{item.name}}</h1>
 
-    <video v-if="movie.contentUrl.includes('.mp4')" 
-      :src="movie.contentUrl" controls autoplay loop>
+    <video v-if="item.contentUrl.includes('.mp4')" 
+      :src="item.contentUrl" controls autoplay loop>
     </video>
     <div v-else class="videoWrapper">
       <iframe 
         width="560" 
         height="315" 
-        :src="movie.contentUrl + '?&autoplay=1'" 
+        :src="item.contentUrl + '?&autoplay=1'" 
         frameborder="0" 
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
         allowfullscreen>
@@ -35,23 +35,23 @@ export default Vue.extend({
     return {
       loaded: false,
       error: '',
-      movie: null,
+      item: null,
     }
   },
-  name: 'movie',
+  name: 'item',
   computed: mapState(['identity']),
   created() {
   },
   watch: {
     identity(newValue, oldValue) {
-      this.loadMovie()
+      this.loadItem()
     }
   },
   mounted() {
-    this.loadMovie()
+    this.loadItem()
   },
   methods: {
-    loadMovie() {
+    loadItem() {
       if (this.identity) {
         this.$http.get('http://localhost:3001/request-access').then((response) => {
           const challenge = response.body
@@ -67,11 +67,11 @@ export default Vue.extend({
             false).buildAtom()
           this.identity.signAtom(atom).then((signedAtom) => {
             this.$http.post('http://localhost:3001/movie', {
-              movieTokenUri: this.$route.params.id,
+              itemTokenUri: this.$route.params.id,
               atom: atom.toJSON(),
             }).then((response) => {
               this.loaded = true
-              this.movie = response.body
+              this.item = response.body
             }, (error) => {
               console.log(error)
               this.loaded = true
