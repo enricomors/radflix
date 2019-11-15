@@ -6,6 +6,8 @@ import fs from 'fs-extra'
 import BN from 'bn.js'
 import cors from 'cors'
 import bodyParser from 'body-parser'
+import { async } from 'rxjs/internal/scheduler/async';
+import { model } from 'mongoose';
 
 const app: express.Application = express();
 const port: number = Number(process.env.PORT) || 3001;
@@ -41,10 +43,75 @@ app.listen(port, (err: Error) => {
     return loadIdentity().then(
       id => {
         identity = id;
-        newToken(identity);
       }
     )
   }
+});
+
+/** Creates a new multiple issuance token to represent a new
+ * unique item
+ */
+app.post('/add-item', async (req, res) => {
+  // Fetch token data from request
+  const name = req.param('name');
+  const description = req.param('description');
+  const posterUrl = req.param('posterUrl');
+  const contentUrl = req.param('contentUrl');
+  const price = req.param('price') ? parseFloat(req.param('price')) : 1;
+  // symbol for creative license token
+  const clSymbol = 'CRT' + req.param('symbol');
+  // symbol for ownership license token
+  const ownSymbol = 'OWN' + req.param('symbol');
+  // creates new RRI for the new creative license token
+  const clUri = new RRI(identity.address, clSymbol);
+  // Creates new RRI for the new ownership license token
+  const ownUri = new RRI(identity.address, ownSymbol);
+  
+  /** Creates two new multi issuance tokens, one for the ownership
+   * license, one for the creative license
+   */
+  try {
+    new RadixTransactionBuilder().createTokenMultiIssuance(
+      identity.account, name, clSymbol, description, 1, 1, posterUrl)
+      .signAndSubmit(identity)
+      .subscribe({
+        next: status => { console.log(status) },
+        complete: async () => {
+          const item = new models.Item({
+            clTokenUri: clUri.toString(),
+            olTokenUri: ownUri.toString(),
+            name,
+            description,
+            price,
+            posterUrl,
+            contentUrl,
+          });
+          await item.save();
+          console.log('New item inserted in database')
+          console.log('Creative License Token created');
+        },
+        error: (e) => {
+          console.error(e);
+          res.status(400).send(e);
+        }
+      });
+      new RadixTransactionBuilder().createTokenMultiIssuance(
+        identity.account, name, ownSymbol, description, 1, 1, posterUrl
+      ).signAndSubmit(identity)
+      .subscribe({
+        next: status => { console.log(status) },
+        complete: () => {
+          console.log('Ownership License Token created');
+          res.status(200).send('Item creation completed');
+        },
+        error: (e) => {
+          console.error(e);
+          res.status(400).send(e);
+        }
+      });
+    } catch (error) {
+      res.status(400).send(error.message);
+    }
 });
 
 /** If Exists, loads the existing identity, otherwise create new */
@@ -73,6 +140,8 @@ async function loadIdentity() {
       await myAccount.openNodeConnection();
       /** Encrypt content to be written in keystore file */
       const content = await RadixKeyStore.encryptKey(myIdentity.address, keyStorePwd);
+      console.log('address: ', myIdentity.address);
+      console.log('content: ', content);
       /** Writes the content into keystore file */
       await fs.writeJSON(keyStorePath, content);
       console.log('New identity generated!');
@@ -81,45 +150,4 @@ async function loadIdentity() {
   }
 }
 
-/** Creates a new token using the identity loaded */
-function newToken(identity: RadixIdentity) {
-  try {
-    /** Constructs a new transaction and creates a new token */
-    new RadixTransactionBuilder().createTokenSingleIssuance(
-      identity.account,
-      name,
-      symbol,
-      description,
-      granularity,
-      amount,
-      iconUrl
-    ).signAndSubmit(identity).subscribe({
-      next: status => {
-        console.log(status);
-      },
-      complete: () => {
-        console.log('Token definition created');
-        /** Creates a reference to the newly created token */
-        const tokenReference = `/${identity.account.getAddress()}/${symbol}`;
-        console.log('Token amount and token definition')
-        /** Gets the amount of token identified by tokenReference of the account */
-        identity.account.transferSystem.tokenUnitsBalance[tokenReference];
-        /** Returns the token definition */
-        identity.account.tokenDefinitionSystem.getTokenDefinition(symbol);
-        /** Alternative for querying the ledger for token definitions */
-        console.log('Using the radixTokenManager to query the ledger');
-        radixTokenManager.getTokenDefinition(tokenReference).then(tokenDefinition => {
-          tokenDefinition.totalSupply;
-        }).catch(error => {
-          console.error('Token not found', error);
-        });
-      },
-      error: err => { 
-        console.error('Error submitting transaction', err);
-      }
-    })
-  } catch (e) {
-    console.error(e);
-  } 
-}
 

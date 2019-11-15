@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'
 
-export type MovieModel = mongoose.Document & {
-    tokenUri: string,
+export type ItemModel = mongoose.Document & {
+    clTokenUri: string,
+    olTokenUri: string,
     name: string,
     description: string,
     posterUrl: string,
@@ -9,8 +10,12 @@ export type MovieModel = mongoose.Document & {
     contentUrl: string,
 };
 
-const movieSchema = new mongoose.Schema({
-    tokenUri: {
+const itemSchema = new mongoose.Schema({
+    clTokenUri: {
+        type: String,
+        unique: true,
+    },
+    olTokenUri: {
         type: String,
         unique: true,
     },
@@ -21,6 +26,6 @@ const movieSchema = new mongoose.Schema({
     contentUrl: String,
 });
 
-const Movie = mongoose.model<MovieModel>('Movie', movieSchema);
+const Item = mongoose.model<ItemModel>('Item', itemSchema);
 
-export default Movie;
+export default Item;
