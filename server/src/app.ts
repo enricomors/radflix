@@ -34,19 +34,22 @@ const granularity = 1;
 const amount = 1000;
 const iconUrl = 'http://a.b.com/icon.png';
 
-/** Starts the server at port 3001 */
-app.listen(port, (err: Error) => {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log('NODE_ENV =', process.env.NODE_ENV);
-    return loadIdentity().then(
-      id => {
-        identity = id;
-      }
-    )
-  }
-});
+/** Connect to the database and starts the server at port 3001 */
+connectDb()
+.then(() => {
+  return loadIdentity()
+}).then(_identity => {
+  identity = _identity;
+
+  app.listen(port, (err: Error) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('NODE_ENV =', process.env.NODE_ENV);
+    }
+  });
+})
+
 
 /** Creates a new multiple issuance token to represent a new
  * unique item

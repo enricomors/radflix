@@ -57,7 +57,17 @@ export default Vue.extend({
     },
     methods: {
         submit() {
-            // this.$http.post('http://localhost:3001/')
+            this.$http.post('http://localhost:3001/add-item', {
+                name: this.form.itemName,
+                description: this.form.description,
+                symbol: this.form.symbol,
+                contentUrl: this.form.contentUrl,
+                posterUrl: this.form.posterUrl
+            }).then((response) => {
+                console.log('New item inserted');
+            }, (error) => {
+                console.error('Error inserting new item', error);
+            });
         }
     },  
 })

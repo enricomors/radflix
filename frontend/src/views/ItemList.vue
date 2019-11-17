@@ -57,7 +57,7 @@ export default Vue.extend({
     }
   },
   mounted() {
-    this.loadAllItems()
+    // this.loadAllItems()
   },
   methods: {
     loadAllItems() {
